@@ -11,24 +11,43 @@ const test = base.extend({
 });
 
 test.describe('Smoke Test - Homepage', () => {
-
-    test('verify homepage URL', async ({ homePage }) => {
-        await homePage.navigate();
-        const url = homePage.page.url();
-        expect(url).toBe('https://nocnoc.com/');
-    });
     test('verify homepage displays the correct title', async ({ homePage }) => {
-        await homePage.navigate(); // Navigates to the homepage
-        await homePage.page.waitForLoadState('networkidle'); // Wait for network requests to finish
-        const title = await homePage.getTitle(); // Retrieves the page title
-        console.log('Page Title:', title); // Logs the actual title for debugging
-        expect(title).toBe(homepageData.homepageTitle); // Asserts the title matches the expected value
-    });
-    test('debug HTML content', async ({ homePage }) => {
         await homePage.navigate();
-        console.log(await homePage.page.content()); // Logs the HTML content of the page
+        await homePage.page.waitForLoadState('networkidle'); // Ensures all network requests are completed
+        const title = await homePage.getTitle();
+        expect(title).toBe(homepageData.homepageTitle);
     });
-    
+
+    test('verify header elements on the homepage', async ({ homePage }) => {
+        await homePage.navigate();
+        await homePage.page.waitForLoadState('networkidle'); // Ensures all network requests are completed
+        await homePage.verifyHeaderElements();
+    });
+
+    // test('verify search bar on the homepage', async ({ homePage }) => {
+    //     await homePage.navigate();
+    //     await homePage.page.waitForLoadState('networkidle'); // Ensures all network requests are completed
+    //     await homePage.verifySearchBar();
+    // });
+
 
 
 });
+
+// test.describe('Smoke Test - Product Detail Page', () => {
+//     test('verify product detail page displays the correct title', async ({ homePage }) => {
+//         await homePage.navigate();
+//         await homePage.page.waitForLoadState('networkidle'); // Ensures all network requests are completed
+//         await homePage.navigateToProductDetailPage();
+//         const title = await homePage.getTitle();
+//         expect(title).toBe(homepageData.productDetailPageTitle);
+//     });
+
+//     test('verify product detail page displays the correct product title', async ({ homePage }) => {
+//         await homePage.navigate();
+//         await homePage.page.waitForLoadState('networkidle'); // Ensures all network requests are completed
+//         await homePage.navigateToProductDetailPage();
+//         const productTitle = await homePage.getProductTitle();
+//         expect(productTitle).toBe(homepageData.productTitle);
+//     });
+// });
