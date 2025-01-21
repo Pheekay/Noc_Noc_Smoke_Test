@@ -1,77 +1,130 @@
 import { Page, expect } from '@playwright/test';
+import { HeaderTestIds, HeaderTestIdsType } from '../src/testIds/header';
+
+const BASE_URL = 'https://nocnoc.com/';
 
 export class HomePage {
-    constructor(private page: Page) {}
+    private readonly testIds: HeaderTestIdsType;
+
+    constructor(private page: Page) {
+        this.testIds = HeaderTestIds;
+    }
 
     /**
-     * Navigate to the homepage and close all popups.
+     * Navigate to the homepage and handle initial setup
      */
     async navigate(): Promise<void> {
         try {
-            await this.page.goto('https://nocnoc.com/');
-
-            // Close all popups that are not the main page
-            const popups = this.page.context().pages();
-            for (const popup of popups) {
-                if (popup !== this.page) {
-                    await popup.close();
-                }
-            }
+            await this.page.goto(BASE_URL);
+            await this.closePopups();
+            await this.page.waitForLoadState('networkidle');
         } catch (error) {
-            console.error('Error during navigation:', error);
+            console.error('Navigation failed:', error);
             throw error;
         }
     }
 
     /**
-     * Get the title of the page.
-     * @returns The title as a string.
+     * Close all popup windows except main page
+     */
+    private async closePopups(): Promise<void> {
+        const popups = this.page.context().pages();
+        for (const popup of popups) {
+            if (popup !== this.page) {
+                await popup.close();
+            }
+        }
+    }
+
+    /**
+     * Get the page title
      */
     async getTitle(): Promise<string> {
         try {
-            // Wait for the page to be fully loaded
             await this.page.waitForLoadState('domcontentloaded');
-
-            // Extract the title using page.content if page.title() fails
-            const content = await this.page.content();
-            const titleMatch = content.match(/<title>(.*?)<\/title>/);
-            const title = titleMatch ? titleMatch[1] : '';
-
+            const title = await this.page.title();
             if (!title) {
-                throw new Error('Page title is empty or not found');
+                throw new Error('Page title not found');
             }
-
             return title;
         } catch (error) {
-            console.error('Failed to get page title:', error);
+            console.error('Failed to get title:', error);
             throw error;
         }
     }
 
     /**
-     * Verify the visibility of header elements on the homepage.
+     * Verify all header elements
      */
-    async verifyHeaderElements(): Promise<void> {
+    async verifyAllHeaderElements(): Promise<void> {
         try {
-            // Verify that all expected header elements are visible
-            await expect(this.page.getByTestId('nocnoc-logo')).toBeVisible();
-            await expect(this.page.getByLabel('Search Button')).toBeVisible();
-            await expect(this.page.getByTestId('cart-btn')).toBeVisible();
-            await expect(this.page.getByTestId('login-btn')).toBeVisible();
-            await expect(this.page.getByRole('img', { name: 'language' })).toBeVisible();
+            await this.verifyNavigationElements();
+            await this.verifyUserActionButtons();
+            await this.verifySearchBar();
+            await this.verifyTopHeaderSection();
         } catch (error) {
-            console.error('Header element verification failed:', error);
+            console.error('Header verification failed:', error);
             throw error;
         }
     }
-    async verifySearchBar(): Promise<void> {
+
+    /**
+     * Verify navigation elements in header
+     */
+    private async verifyNavigationElements(): Promise<void> {
         try {
-            // Verify that all expected header elements are visible
-            await expect(this.page.getByTestId('search-bar')).toBeVisible();
-            await expect(this.page.getByTestId('search-btn')).toBeVisible();
+            await expect(this.page.getByTestId(this.testIds.logo)).toBeVisible();
+            await expect(this.page.getByTestId(this.testIds.searchButton)).toBeVisible();
         } catch (error) {
-            console.error('Header element verification failed:', error);
+            console.error('Navigation elements verification failed:', error);
             throw error;
         }
     }
+
+    /**
+     * Verify user action buttons in header
+     */
+    private async verifyUserActionButtons(): Promise<void> {
+        try {
+            await expect(this.page.getByTestId(this.testIds.cartButton)).toBeVisible();
+            await expect(this.page.getByTestId(this.testIds.loginButton)).toBeVisible();
+            await expect(this.page.getByTestId(this.testIds.languageSelector)).toBeVisible();
+        } catch (error) {
+            console.error('User action buttons verification failed:', error);
+            throw error;
+        }
+    }
+
+    /**
+     * Verify search bar functionality
+     */
+    private async verifySearchBar(): Promise<void> {
+        try {
+            await expect(this.page.locator('#search-suggestion-input')).toBeVisible();
+            await expect(this.page.getByTestId(this.testIds.searchButton)).toBeVisible();
+        } catch (error) {
+            console.error('Search bar verification failed:', error);
+            throw error;
+        }
+    }
+
+    /**
+     * Verify download section elements
+     */
+    private async verifyTopHeaderSection(): Promise<void> {
+        try {
+            await expect(this.page.getByTestId(this.testIds.iosDownload)).toBeVisible();
+            await expect(this.page.getByTestId(this.testIds.androidDownload)).toBeVisible();
+            await expect(this.page.getByTestId(this.testIds.clubBenefits)).toBeVisible();
+            await expect(this.page.getByTestId(this.testIds.service)).toBeVisible();
+            await expect(this.page.getByTestId(this.testIds.seller)).toBeVisible();
+            await expect(this.page.getByTestId(this.testIds.business)).toBeVisible();
+            await expect(this.page.getByTestId(this.testIds.blog)).toBeVisible();
+        } catch (error) {
+            console.error('Top Header section verification failed:', error);
+            throw error;
+        }
+    }
+
+   
 }
