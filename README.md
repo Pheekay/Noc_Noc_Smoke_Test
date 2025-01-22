@@ -12,7 +12,7 @@ Make sure you have Node.js installed. You can download it from [nodejs.org](http
 
 1. Clone the repository:
     ```sh
-    git clone https://github.com/yourusername/Noc_Noc_Smoke_Test.git
+    git clone [https://github.com/Pheekay/Noc_Noc_Smoke_Test.git]
     ```
 
 2. Navigate to the project directory:
