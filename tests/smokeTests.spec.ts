@@ -37,20 +37,60 @@ test.describe('Smoke Test - Homepage', () => {
     });
 
     test.describe('Authentication', () => {
-        test('should successfully login with valid credentials and logout', async ({ homePage }) => {
+        test.beforeEach(async ({ homePage }, testInfo) => {
+            testInfo.setTimeout(60000);
+            await Promise.all([
+                homePage.navigate(),
+                homePage.page.waitForLoadState('networkidle'),
+                homePage.page.waitForLoadState('domcontentloaded')
+            ]);
+        });
+
+        test.afterEach(async ({ homePage }, testInfo) => {
+            testInfo.setTimeout(60000);
+            try {
+                const profileButton = homePage.page.getByTestId('login-btn');
+                await profileButton.waitFor({ state: 'visible', timeout: 10000 });
+                
+                const emailText = await profileButton
+                    .locator('span.bu-max-w-15.bu-truncate')
+                    .textContent();
+                
+                if (emailText && emailText.toLowerCase() !== 'เข้าสู่ระบบ') {
+                    await homePage.logout();
+                    await expect(profileButton.locator('span'))
+                        .toHaveText('เข้าสู่ระบบ', { timeout: 10000 });
+                }
+            } catch (error) {
+                console.log('No cleanup needed:', error.message);
+            }
+        });
+
+        test('should successfully login with valid credentials', async ({ homePage }) => {
             await homePage.login(authData.valid.email, authData.valid.password);
-            await expect(homePage.page.getByTestId('login-btn')).toBeVisible();
-            const emailButton = homePage.page.getByTestId('login-btn');
-            const emailText = await emailButton.locator('span.bu-max-w-15.bu-truncate').innerText();
-            expect(emailText.toLowerCase()).toBe(authData.valid.email.toLowerCase());
             
-           // await homePage.logout();
+            const profileButton = homePage.page.getByTestId('login-btn');
+            const emailElement = profileButton.locator('span.bu-max-w-15.bu-truncate');
+            
+            // Case-insensitive comparison
+            const actualEmail = await emailElement.textContent();
+            expect(actualEmail.toLowerCase()).toBe(authData.valid.email.toLowerCase());
         });
 
         // test('should show error with invalid credentials', async ({ homePage }) => {
+        //     // Attempt login with invalid credentials
         //     await homePage.login(authData.invalid.email, authData.invalid.password);
-        //     await expect(homePage.page.getByTestId('login-error')).toHaveText(authData.errorMessages.invalidCredentials);
+            
+        //     // Verify error message
+        //     await expect(homePage.page.locator('.invalid-feedback'))
+        //         .toHaveText(authData.errorMessages.invalidCredentials);
         // });
+
+        test('should redirect to register page for non-existing email', async ({ homePage }) => {
+            await homePage.login(authData.nonExisting.email, '');
+            await homePage.verifyRegisterPage(authData.nonExisting.email);
+            
+        });
     });
 });
 
