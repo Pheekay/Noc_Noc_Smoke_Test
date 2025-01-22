@@ -26,6 +26,11 @@ export interface LoginTestIdsType {
     passwordHasLetter: string;
     passwordHasNumber: string;
     passwordIsValid: string;
+
+    // User Profile
+    userProfile: string;
+    logoutButton: string;
+    profileMenu: string;
 }
 
 export const LoginTestIds: LoginTestIdsType = {
@@ -55,5 +60,10 @@ export const LoginTestIds: LoginTestIdsType = {
     passwordMinLength: 'password-min-length',
     passwordHasLetter: 'password-has-letter',
     passwordHasNumber: 'password-has-number',
-    passwordIsValid: 'password-is-valid'
+    passwordIsValid: 'password-is-valid',
+
+    // User Profile
+    userProfile: 'login-btn',
+    logoutButton: 'logout-button',
+    profileMenu: 'profile-menu'
 };

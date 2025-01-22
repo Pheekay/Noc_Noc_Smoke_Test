@@ -2,6 +2,8 @@ import { Page, expect } from '@playwright/test';
 import { HeaderTestIds, HeaderTestIdsType } from '../src/testIds/header';
 import { FooterTestIds, FooterTestIdsType } from '../src/testIds/footer';
 import { LoginTestIds, LoginTestIdsType } from '../src/testIds/login';
+import { RegisterTestIds, RegisterTestIdsType } from '../src/testIds/register';
+import { registerData } from '../src/testData/registerData';
 
 const BASE_URL = 'https://nocnoc.com/';
 
@@ -9,11 +11,13 @@ export class HomePage {
     private readonly headerTestIds: HeaderTestIdsType;
     private readonly footerTestIds: FooterTestIdsType;
     private readonly loginTestIds: LoginTestIdsType;
+    private readonly registerTestIds: RegisterTestIdsType;
 
     constructor(private page: Page) {
         this.headerTestIds = HeaderTestIds;
         this.footerTestIds = FooterTestIds;
         this.loginTestIds = LoginTestIds;
+        this.registerTestIds = RegisterTestIds;
     }
 
     /**
@@ -193,6 +197,21 @@ export class HomePage {
         }
     }
 
+    async verifyLoginSuccess(email: string): Promise<void> {
+        try {
+            // Wait for login button with email
+            const loginButton = await this.page.getByTestId(this.loginTestIds.loginButton);
+            await expect(loginButton).toBeVisible();
+
+            // Verify email text
+            const emailText = await loginButton.locator('span.bu-max-w-15.bu-truncate').innerText();
+            expect(emailText.toLowerCase()).toBe(email.toLowerCase());
+        } catch (error) {
+            console.error('Login verification failed:', error);
+            throw error;
+        }
+    }
+
     async login(email: string, password: string): Promise<void> {
         try {
             // Open login modal
@@ -202,20 +221,77 @@ export class HomePage {
             await this.page.waitForSelector(`#${this.loginTestIds.emailPhoneInput}`);
             await this.page.locator(`#${this.loginTestIds.emailPhoneInput}`).fill(email);
             
-            // Click next and wait for password screen
+            // Click next
             await this.page.locator('button:has-text("ต่อไป")').click();
             
-            // Wait for password input to be visible and fill it
-            await this.page.waitForSelector('input[type="password"]', { state: 'visible' });
-            await this.page.locator('input[type="password"]').fill(password);
+            // Wait for either password input or register page
+            const passwordInput = this.page.locator('input[type="password"]');
+            const registerTitle = this.page.locator('h2:has-text("สร้างบัญชี NocNoc")');
             
-            // Submit login
-            await this.page.locator('button:has-text("เข้าใช้งาน")').click();
+            await Promise.race([
+                passwordInput.waitFor({ state: 'visible', timeout: 5000 }),
+                registerTitle.waitFor({ state: 'visible', timeout: 5000 })
+            ]);
             
-            // Wait for login completion
-            await this.page.waitForLoadState('networkidle');
+            // Check if redirected to register page
+            if (await registerTitle.isVisible()) {
+                return; // Exit function if redirected to register
+            }
+            
+            // Continue with password input if not empty
+            if (password) {
+                await passwordInput.fill(password);
+                await this.page.locator('button:has-text("เข้าใช้งาน")').click();
+                await this.page.waitForLoadState('networkidle');
+                await this.verifyLoginSuccess(email);
+            }
         } catch (error) {
             console.error('Login failed:', error);
+            throw error;
+        }
+    }
+
+    async verifyRegisterPage(email: string): Promise<void> {
+        try {
+            // Wait for register page container
+            await this.page.waitForSelector(`.${this.registerTestIds.container}`);
+
+            // Verify page header
+            await expect(this.page.getByRole('heading', { name: registerData.title })).toBeVisible();
+            await expect(this.page.getByRole('heading', { name: registerData.subtitle })).toBeVisible();
+
+            // Verify email input
+            const emailInput = this.page.locator(`#${this.registerTestIds.emailInput}`);
+            await expect(emailInput).toBeDisabled();
+            await expect(emailInput).toHaveValue(email);
+
+            // Verify phone section
+            await expect(this.page.locator(`.${this.registerTestIds.phoneField}`)).toBeVisible();
+
+            // Verify password block
+            const passwordBlock = this.page.locator(`.${this.registerTestIds.passwordBlock.container}`);
+            await expect(passwordBlock.locator(`h3.${this.registerTestIds.passwordBlock.header}`))
+                .toHaveText(registerData.passwordHeader);
+
+            // Verify password validation
+            const validatorPills = passwordBlock.locator(`.${this.registerTestIds.passwordBlock.validatorPills}`);
+            await expect(validatorPills.locator('h5')).toHaveText('Conditions');
+            await expect(validatorPills.locator(`.${this.registerTestIds.passwordBlock.rulesList} li`))
+                .toHaveCount(3);
+
+            // Verify password inputs and eye icons
+            await expect(passwordBlock.locator(`input[name="${this.registerTestIds.passwordBlock.password1Input}"]`))
+                .toBeVisible();
+            await expect(passwordBlock.locator(`input[name="${this.registerTestIds.passwordBlock.password2Input}"]`))
+                .toBeVisible();
+            // await expect(passwordBlock.locator(`.${this.registerTestIds.passwordBlock.password1Eye}`)).toBeVisible();
+            // await expect(passwordBlock.locator(`.${this.registerTestIds.passwordBlock.password2Eye}`)).toBeVisible();
+
+            // Verify create account button
+            await expect(this.page.getByRole('button', { name: registerData.createAccountButton }))
+                .toBeVisible();
+        } catch (error) {
+            console.error('Register page verification failed:', error);
             throw error;
         }
     }
@@ -238,13 +314,22 @@ export class HomePage {
     //     }
     // }
 
-    // async logout(): Promise<void> {
-    //     try {
-    //         await this.page.getByTestId(this.loginTestIds.userProfile).click();
-    //         await this.page.getByTestId(this.loginTestIds.logoutButton).click();
-    //     } catch (error) {
-    //         console.error('Logout failed:', error);
-    //         throw error;
-    //     }
-    // }
+    async logout(): Promise<void> {
+        try {
+            // Verify and click profile button
+            const profileButton = this.page.getByTestId(this.loginTestIds.userProfile);
+            await expect(profileButton).toBeVisible();
+            await profileButton.click();
+            
+            // Wait for profile menu and click logout
+            await this.page.locator('span.bu-typography-caption-4').filter({ hasText: 'ออกจากระบบ' }).click();
+            
+            // Wait for redirect and verify
+            await this.page.waitForURL(BASE_URL);
+            await expect(this.page.getByTestId(this.loginTestIds.loginButton)).toBeVisible();
+        } catch (error) {
+            console.error('Logout failed:', error);
+            throw error;
+        }
+    }
 }
