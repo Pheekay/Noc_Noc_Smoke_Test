@@ -6,9 +6,9 @@ export interface ProductSpecs {
 }
 
 export interface ProductPrice {
-    price: number;
-    originalPrice: number;
-    unitDiscount: number;
+    pricePerUnit: string;
+    originalPrice: string;
+    unitDiscount: string;
     perDiscount: string;
 }
 
@@ -61,9 +61,9 @@ export const productData: ProductData = {
         shortName: 'TCL'
     },
     price: {
-        price: 40300,
-        originalPrice: 69990,
-        unitDiscount: 29690,
+        pricePerUnit: '37,835.00',
+        originalPrice: '69,990.00',
+        unitDiscount: '29690',
         perDiscount: '42'
     },
     category: {

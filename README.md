@@ -27,12 +27,6 @@ npm install
 - `src/testIds/`: Selectors and test IDs
 - `tests/`: Test specifications and suites
 
-### Main Features:
-- Authentication tests
-- Homepage navigation
-- Header/Footer verification
-- Registration flow
-
 ### Running Tests
 
 To run the Playwright tests, use the following command:
