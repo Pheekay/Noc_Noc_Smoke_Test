@@ -31,8 +31,8 @@ export interface AuthData {
 
 export const authData: AuthData = {
     valid: {
-        email: "krith.jkr@gmail.com",
-        password: "petergep401"
+        email: " ",
+        password: " "
     },
     invalid: {
         email: "invalid@nocnoc.com",
