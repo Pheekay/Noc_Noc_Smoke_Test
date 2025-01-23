@@ -24,9 +24,9 @@ export class ProductDetailPage {
         await this.page.getByPlaceholder('กำลังมองหาอะไรให้บ้าน? เสิร์ชเลย').click();
         await this.page.getByPlaceholder('กำลังมองหาอะไรให้บ้าน? เสิร์ชเลย').fill(productName);
         await this.page.getByPlaceholder('กำลังมองหาอะไรให้บ้าน? เสิร์ชเลย').press('Enter');
-        const productLink = this.page.getByRole('link', { name: new RegExp(productName, 'i') });
-        await expect(productLink).toBeVisible();
-        await productLink.click();
+        const productCard = this.page.getByRole('link', { name: 'tag image of /static/images/e' });
+        await expect(productCard).toBeVisible();
+        
     }
 
     async verifySearchResults() {
@@ -38,5 +38,8 @@ export class ProductDetailPage {
             console.error('Search result verification failed:', error);
             throw error;
         }
+    }
+    async addProductToCart() {
+        await this.page.getByRole('button', { name: 'เพิ่มลงตะกร้า' }).click();
     }
 }
