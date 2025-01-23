@@ -38,7 +38,10 @@ test.describe('Smoke Test - Homepage', () => {
 
     test.describe('Authentication', () => {
         test.beforeEach(async ({ homePage }, testInfo) => {
+            // Increase timeout to 60s
             testInfo.setTimeout(60000);
+            
+            // Add explicit waits for page load
             await Promise.all([
                 homePage.navigate(),
                 homePage.page.waitForLoadState('networkidle'),
@@ -46,50 +49,56 @@ test.describe('Smoke Test - Homepage', () => {
             ]);
         });
 
+        test('should successfully login with valid credentials', async ({ homePage }) => {
+            // Login with valid credentials
+            await homePage.login(authData.valid.email, authData.valid.password);
+            
+            // Verify login success
+            const profileButton = homePage.page.getByTestId('login-btn');
+            await expect(profileButton.locator('span.bu-max-w-15.bu-truncate'))
+                .toHaveText(authData.valid.email, { ignoreCase: true });
+        });
+
+        test('should show error with invalid credentials', async ({ homePage }) => {
+            // Attempt login with invalid credentials
+            await homePage.login(authData.valid.email, authData.invalid.password);
+            
+            // Verify error message appearance and content
+            const errorMessage = homePage.page.locator('div.is-invalid.invalid-feedback');
+            await expect(errorMessage).toBeVisible();
+            await expect(errorMessage).toHaveText(authData.errorMessages.invalidCredentials);
+        });
+
+        test('should redirect to register page for non-existing email', async ({ homePage }) => {
+            // Attempt login with non-existing email
+            await homePage.login(authData.nonExisting.email, '');
+            
+            // Verify register page content
+            await homePage.verifyRegisterPage(authData.nonExisting.email);
+        });
+
         test.afterEach(async ({ homePage }, testInfo) => {
+            // Increase timeout for cleanup
             testInfo.setTimeout(60000);
+            
             try {
                 const profileButton = homePage.page.getByTestId('login-btn');
+                // Add explicit wait for profile button
                 await profileButton.waitFor({ state: 'visible', timeout: 10000 });
                 
                 const emailText = await profileButton
                     .locator('span.bu-max-w-15.bu-truncate')
                     .textContent();
                 
-                if (emailText && emailText.toLowerCase() !== 'เข้าสู่ระบบ') {
+                if (emailText && emailText !== 'เข้าสู่ระบบ') {
                     await homePage.logout();
+                    // Add explicit wait for logout completion
                     await expect(profileButton.locator('span'))
                         .toHaveText('เข้าสู่ระบบ', { timeout: 10000 });
                 }
             } catch (error) {
-                console.log('No cleanup needed:', error.message);
+                console.log('Cleanup error:', error.message);
             }
-        });
-
-        test('should successfully login with valid credentials', async ({ homePage }) => {
-            await homePage.login(authData.valid.email, authData.valid.password);
-            
-            const profileButton = homePage.page.getByTestId('login-btn');
-            const emailElement = profileButton.locator('span.bu-max-w-15.bu-truncate');
-            
-            // Case-insensitive comparison
-            const actualEmail = await emailElement.textContent();
-            expect(actualEmail.toLowerCase()).toBe(authData.valid.email.toLowerCase());
-        });
-
-        // test('should show error with invalid credentials', async ({ homePage }) => {
-        //     // Attempt login with invalid credentials
-        //     await homePage.login(authData.invalid.email, authData.invalid.password);
-            
-        //     // Verify error message
-        //     await expect(homePage.page.locator('.invalid-feedback'))
-        //         .toHaveText(authData.errorMessages.invalidCredentials);
-        // });
-
-        test('should redirect to register page for non-existing email', async ({ homePage }) => {
-            await homePage.login(authData.nonExisting.email, '');
-            await homePage.verifyRegisterPage(authData.nonExisting.email);
-            
         });
     });
 });

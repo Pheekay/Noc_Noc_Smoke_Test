@@ -229,21 +229,31 @@ export class HomePage {
             const registerTitle = this.page.locator('h2:has-text("สร้างบัญชี NocNoc")');
             
             await Promise.race([
-                passwordInput.waitFor({ state: 'visible', timeout: 5000 }),
-                registerTitle.waitFor({ state: 'visible', timeout: 5000 })
+                passwordInput.waitFor({ state: 'visible', timeout: 6000 }),
+                registerTitle.waitFor({ state: 'visible', timeout: 6000 })
             ]);
             
             // Check if redirected to register page
             if (await registerTitle.isVisible()) {
-                return; // Exit function if redirected to register
+                return;
             }
             
             // Continue with password input if not empty
             if (password) {
                 await passwordInput.fill(password);
                 await this.page.locator('button:has-text("เข้าใช้งาน")').click();
+                
+                // Wait for either error message or successful login
                 await this.page.waitForLoadState('networkidle');
-                await this.verifyLoginSuccess(email);
+                
+                // Check for error message
+                const errorMessage = this.page.locator('div.is-invalid.invalid-feedback');
+                const isErrorVisible = await errorMessage.isVisible();
+                
+                // Only verify login success if no error message
+                if (!isErrorVisible) {
+                    await this.verifyLoginSuccess(email);
+                }
             }
         } catch (error) {
             console.error('Login failed:', error);
