@@ -1,6 +1,6 @@
 # Noc_Noc_Smoke_Test
 
-This Test is used for Automation Assignment Interview.
+End-to-end test automation for NocNoc website using Playwright.
 
 ## Getting Started
 
@@ -8,22 +8,30 @@ This Test is used for Automation Assignment Interview.
 
 Make sure you have Node.js installed. You can download it from [nodejs.org](https://nodejs.org/).
 
-### Installation
+## Installation
 
-1. Clone the repository:
-    ```sh
-    git clone [https://github.com/Pheekay/Noc_Noc_Smoke_Test.git]
-    ```
+```sh
+# Clone repository
+git clone https://github.com/Pheekay/Noc_Noc_Smoke_Test.git
 
-2. Navigate to the project directory:
-    ```sh
-    cd Noc_Noc_Smoke_Test
-    ```
+# Navigate to project
+cd Noc_Noc_Smoke_Test
 
-3. Install the dependencies:
-    ```sh
-    npm install
-    ```
+# Install dependencies
+npm install
+```
+
+### Key Components:
+- `pages/`: Page Object Models for test automation
+- `src/testData/`: Test data and constants
+- `src/testIds/`: Selectors and test IDs
+- `tests/`: Test specifications and suites
+
+### Main Features:
+- Authentication tests
+- Homepage navigation
+- Header/Footer verification
+- Registration flow
 
 ### Running Tests
 
