@@ -342,4 +342,17 @@ export class HomePage {
             throw error;
         }
     }
+
+    async searchProduct(searchText: string): Promise<void> {
+        try {
+            const searchInput = this.page.getByPlaceholder('กำลังมองหาอะไรให้บ้าน? เสิร์ชเลย');
+            await searchInput.click();
+            await searchInput.fill(searchText);
+            await this.page.getByLabel('Search Button').click();
+            await this.page.waitForLoadState('networkidle');
+        } catch (error) {
+            console.error('Search failed:', error);
+            throw error;
+        }
+    }
 }

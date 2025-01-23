@@ -77,6 +77,8 @@ test.describe('Smoke Test - Homepage', () => {
             await homePage.verifyRegisterPage(authData.nonExisting.email);
         });
 
+        
+
         test.afterEach(async ({ homePage }, testInfo) => {
             // Increase timeout for cleanup
             testInfo.setTimeout(60000);
@@ -101,6 +103,7 @@ test.describe('Smoke Test - Homepage', () => {
             }
         });
     });
+
 });
 
 
